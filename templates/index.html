@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Asset Tracker</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        header { background: #1e293b; padding: 20px 40px; border-bottom: 2px solid #3b82f6; display: flex; align-items: center; gap: 12px; }
+        header h1 { font-size: 1.5rem; color: #3b82f6; }
+        header span { font-size: 0.85rem; color: #94a3b8; }
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+        .form-card { background: #1e293b; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #334155; }
+        .form-card h2 { margin-bottom: 16px; font-size: 1rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        input, select { width: 100%; padding: 10px 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 0.9rem; }
+        input:focus, select:focus { outline: none; border-color: #3b82f6; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-top: 12px; }
+        button:hover { background: #2563eb; }
+        table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        thead { background: #0f172a; }
+        th { padding: 14px 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; }
+        td { padding: 14px 16px; border-top: 1px solid #334155; font-size: 0.9rem; }
+        tr:hover { background: #263148; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-active { background: #064e3b; color: #34d399; }
+        .badge-inactive { background: #3b1919; color: #f87171; }
+        .badge-maintenance { background: #3b2e00; color: #fbbf24; }
+        .delete-btn { color: #f87171; background: none; border: 1px solid #f87171; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+        .delete-btn:hover { background: #f87171; color: white; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: #1e293b; border-radius: 10px; padding: 20px; border: 1px solid #334155; text-align: center; }
+        .stat-card .num { font-size: 2rem; font-weight: 700; color: #3b82f6; }
+        .stat-card .label { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
+        .empty { text-align: center; padding: 48px; color: #475569; }
+    </style>
+</head>
+<body>
+    <header>
+        <span>🖥️</span>
+        <h1>IT Asset Tracker</h1>
+        <span>— Deployed via Jenkins CI/CD on AWS EC2</span>
+    </header>
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="num">{{ assets|length }}</div>
+                <div class="label">Total Assets</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">{{ assets|selectattr('status','equalto','Active')|list|length }}</div>
+                <div class="label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">{{ assets|selectattr('status','equalto','Maintenance')|list|length }}</div>
+                <div class="label">In Maintenance</div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h2>Add New Asset</h2>
+            <form action="/add" method="POST">
+                <div class="form-grid">
+                    <input type="text" name="name" placeholder="Device Name (e.g. Dell Latitude 5520)" required>
+                    <select name="asset_type">
+                        <option value="Laptop">Laptop</option>
+                        <option value="Desktop">Desktop</option>
+                        <option value="Server">Server</option>
+                        <option value="Switch">Switch</option>
+                        <option value="Printer">Printer</option>
+                        <option value="Mobile">Mobile</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" name="serial" placeholder="Serial / Asset Tag">
+                    <input type="text" name="assigned_to" placeholder="Assigned To">
+                    <select name="status">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                </div>
+                <button type="submit">+ Add Asset</button>
+            </form>
+        </div>
+
+        {% if assets %}
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Device Name</th>
+                    <th>Type</th>
+                    <th>Serial / Tag</th>
+                    <th>Assigned To</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in assets %}
+                <tr>
+                    <td>{{ a.id }}</td>
+                    <td>{{ a.name }}</td>
+                    <td>{{ a.asset_type }}</td>
+                    <td>{{ a.serial }}</td>
+                    <td>{{ a.assigned_to }}</td>
+                    <td>
+                        <span class="badge badge-{{ a.status|lower }}">{{ a.status }}</span>
+                    </td>
+                    <td><a href="/delete/{{ a.id }}"><button class="delete-btn">Remove</button></a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">No assets yet — add your first device above.</div>
+        {% endif %}
+    </div>
+</body>
+</html>
