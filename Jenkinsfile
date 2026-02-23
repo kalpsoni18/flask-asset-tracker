@@ -31,7 +31,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment successful! App is live at port 5000.'
+            echo '✅ Deployment successful! App is live at port 3000.'
         }
         failure {
             echo '❌ Deployment failed. Check logs above.'
