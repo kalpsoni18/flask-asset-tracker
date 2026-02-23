@@ -24,7 +24,7 @@ pipeline {
         stage('Health Check') {
             steps {
                 sh 'sleep 15'
-                sh 'curl -f http://localhost:5000/health || exit 1'
+                sh 'curl -f http://localhost:3000/health || exit 1'
             }
         }
     }
